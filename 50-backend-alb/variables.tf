@@ -5,11 +5,11 @@ variable "project" {
 variable "environment" {
     default = "dev"
 }
-
+#zone_id is needed to create r53 records
 variable "zone_id" {
-    default = "Z05013202FKF0ZL12WAOP"
+    default = "Z1037585THT3IBZCMEU3"
 }
-
+#domain name details which we got from hostinger
 variable "domain_name" {
-    default = "daws88s.online"
+    default = "abstractglobal.online"
 }

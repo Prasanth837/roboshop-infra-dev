@@ -1,8 +1,9 @@
+#creating backend application load balancer using terraform resource.
 resource "aws_lb" "backend_alb" {
   name               = "${var.project}-${var.environment}" # roboshop-dev
   internal           = true
   load_balancer_type = "application"
-  security_groups    = [local.backend_alb_sg_id]
+  security_groups    = [local.backend_alb_sg_id] # fetches locals information for sg id and private subnet details
   subnets            = local.private_subnet_ids
 
   # keeping it as false, just to delete using terraform while practice
@@ -15,12 +16,13 @@ resource "aws_lb" "backend_alb" {
     local.common_tags
   )
 }
-
+#creating backend application load balancer listener using terraform resource.
 resource "aws_lb_listener" "http" {
-  load_balancer_arn = aws_lb.backend_alb.arn
+  load_balancer_arn = aws_lb.backend_alb.arn #load balance arn details can be fetched using aws ssm
   port              = "80"
   protocol          = "HTTP"
 
+#so far using default action as fixed action as we don't have target groups yet.
   default_action {
     type = "fixed-response"
 
@@ -32,6 +34,7 @@ resource "aws_lb_listener" "http" {
   }
 }
 
+#Creating aws route 53 records
 resource "aws_route53_record" "www" {
   zone_id = var.zone_id
   name    = "*.backend-alb-${var.environment}.${var.domain_name}"

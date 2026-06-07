@@ -1,3 +1,4 @@
+#Create catalogue instance
 resource "aws_instance" "catalogue" {
   ami           = local.ami_id
   instance_type = "t3.micro"
@@ -12,11 +13,12 @@ resource "aws_instance" "catalogue" {
   )
 }
 
+#Connecting to created catalogue instance then install the software with help of ansible playbooks by provisioning it
 resource "terraform_data" "catalogue" {
   triggers_replace = [
     aws_instance.catalogue.id
   ]
-
+  #connecting 
   connection {
     type     = "ssh"
     user     = "ec2-user"
@@ -37,11 +39,13 @@ resource "terraform_data" "catalogue" {
   }
 }
 
+#Catalogue instance created but making it stop
 resource "aws_ec2_instance_state" "catalogue" {
   instance_id = aws_instance.catalogue.id
   state       = "stopped"
   depends_on = [terraform_data.catalogue]
 }
+
 
 resource "aws_ami_from_instance" "catalogue" {
   # roboshop-dev-catalogue-v3-i-h468sghy
@@ -56,12 +60,13 @@ resource "aws_ami_from_instance" "catalogue" {
   )
 }
 
+#load balancer target group
 resource "aws_lb_target_group" "catalogue" {
   name     = "${var.project}-${var.environment}-catalogue"
   port     = 8080
   protocol = "HTTP"
   vpc_id   = local.vpc_id
-  deregistration_delay = 60
+  deregistration_delay = 60 #giving deregistration delay as 60 sec to not take much time while destroying it.
 
   health_check {
     healthy_threshold = 2
@@ -75,6 +80,7 @@ resource "aws_lb_target_group" "catalogue" {
   }
 }
 
+#create lauch template for ami
 resource "aws_launch_template" "catalogue" {
   name = "${var.project}-${var.environment}-catalogue"
   image_id = aws_ami_from_instance.catalogue.id
@@ -118,6 +124,7 @@ resource "aws_launch_template" "catalogue" {
     )
 }
 
+#Create autoscaling group by taking launch template' ami it will create instances based on desired state.
 resource "aws_autoscaling_group" "catalogue" {
   name                      = "${var.project}-${var.environment}-catalogue"
   max_size                  = 10
@@ -202,7 +209,7 @@ resource "terraform_data" "catalogue_delete" {
   ]
   depends_on = [aws_autoscaling_policy.catalogue]
   
-  # it executes in bastion
+  # it executes in bastion as I am executing terraform commands at bastion server
   provisioner "local-exec" {
     command = "aws ec2 terminate-instances --instance-ids ${aws_instance.catalogue.id} "
   }

@@ -1,3 +1,4 @@
+#Creating ACM certificate for roboshop
 resource "aws_acm_certificate" "roboshop" {
   domain_name       = "*.${var.domain_name}"
   validation_method = "DNS"
@@ -14,6 +15,7 @@ resource "aws_acm_certificate" "roboshop" {
   }
 }
 
+#
 resource "aws_route53_record" "roboshop" {
   for_each = {
     for dvo in aws_acm_certificate.roboshop.domain_validation_options : dvo.domain_name => {

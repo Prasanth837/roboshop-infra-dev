@@ -12,11 +12,13 @@ resource "aws_instance" "mongodb" {
   )
 }
 
+#terraform_data is a built-in Terraform resource used to store values, create dependencies, trigger replacements, and run provisioners without creating any real infrastructure.
+
 resource "terraform_data" "mongodb" {
   triggers_replace = [
     aws_instance.mongodb.id
   ]
-
+  #This is yaml code we are using ansible in terraform to provision and install mongodb by doing remote-exec
   connection {
     type     = "ssh"
     user     = "ec2-user"
@@ -28,7 +30,7 @@ resource "terraform_data" "mongodb" {
     source      = "bootstrap.sh" # Local file path
     destination = "/tmp/bootstrap.sh"    # Destination path on the remote machine
   }
-
+#This Terraform remote-exec provisioner executes commands on the remote server after Terraform connects via SSH
   provisioner "remote-exec" {
     inline = [
         "chmod +x /tmp/bootstrap.sh",
